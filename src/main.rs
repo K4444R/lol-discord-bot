@@ -1,28 +1,40 @@
-use std::env;
 use serenity::Client;
 use serenity::model::gateway::GatewayIntents;
-use dotenv::dotenv;
+use std::env;
+use std::error::Error;
+use dotenvy::dotenv;
 
-mod bot;
-use bot::Handler;
+mod commands;
+mod handler;
+
+use handler::Handler;
 
 #[tokio::main]
-async fn main() {
-    // Получаем токен бота из переменной окружения
-    dotenv().ok(); // Загружаем переменные окружения из файла .env
-    let token = env::var("DISCORD_TOKEN").expect("Expected a token in the environment");
-    
-    // Устанавливаем необходимые намерения (Gateway Intents)
-    let intents = GatewayIntents::GUILD_MESSAGES | GatewayIntents::DIRECT_MESSAGES | GatewayIntents::MESSAGE_CONTENT;
+async fn main() -> Result<(), Box<dyn Error>> {
+    // Load the .env file
+    dotenv()?;
 
-    // Создаем экземпляр клиента с обработчиком событий
+    let token = env::var("DISCORD_TOKEN")
+        .map_err(|_| "Expected a token in the environment")?;
+
+    // Define intents for the bot
+    let intents = GatewayIntents::GUILD_MESSAGES
+                | GatewayIntents::DIRECT_MESSAGES
+                | GatewayIntents::MESSAGE_CONTENT;
+
+
+    let handler = Handler::new();
+
     let mut client = Client::builder(&token, intents)
-        .event_handler(Handler)
+        .event_handler(handler)
         .await
-        .expect("Error creating client");
+        .map_err(|_| "Error creating client")?;
 
-    // Запускаем клиента
-    if let Err(why) = client.start().await {
-        println!("Client error: {why:?}");
-    }
+
+    client.start().await.map_err(|err| {
+        eprintln!("Client error: {:?}", err);
+        "Client error"
+    })?;
+
+    Ok(())
 }
