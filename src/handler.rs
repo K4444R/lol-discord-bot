@@ -6,6 +6,7 @@ use std::collections::HashMap;
 use crate::commands::mastery::MasteryCommand;
 use crate::commands::about::AboutCommand;
 use crate::commands::help::HelpCommand;
+use crate::commands::profile::ProfileCommand;
 use crate::commands::Command;
 
 pub struct CommandHandler {
@@ -19,7 +20,9 @@ impl CommandHandler {
         
         commands.insert("mastery".to_string(), Box::new(MasteryCommand::new())); 
         commands.insert("about".to_string(), Box::new(AboutCommand::new())); 
+        commands.insert("profile".to_string(), Box::new(ProfileCommand::new())); 
         commands.insert("help".to_string(), Box::new(HelpCommand::new())); 
+        
         
 
         CommandHandler { commands }

@@ -6,6 +6,7 @@ use std::collections::HashMap;
 use super::Command; 
 use crate::commands::mastery::MasteryCommand; 
 use crate::commands::about::AboutCommand;
+use crate::commands::profile::ProfileCommand;
 
 pub struct HelpCommand;
 
@@ -23,6 +24,7 @@ fn get_all_commands() -> HashMap<String, Box<dyn Command + Send + Sync>> {
     commands.insert("mastery".to_string(), Box::new(MasteryCommand::new()) as Box<dyn Command + Send + Sync>);
     commands.insert("about".to_string(), Box::new(AboutCommand::new()) as Box<dyn Command + Send + Sync>);
     commands.insert("help".to_string(), Box::new(HelpCommand::new()) as Box<dyn Command + Send + Sync>);
+    commands.insert("profile".to_string(), Box::new(ProfileCommand::new()) as Box<dyn Command + Send + Sync>);
     
     
     commands
