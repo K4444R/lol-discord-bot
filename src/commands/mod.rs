@@ -11,3 +11,4 @@ pub trait Command: Send + Sync {
 
 pub mod help;
 pub mod mastery;
+pub mod about;

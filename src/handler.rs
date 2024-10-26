@@ -4,6 +4,7 @@ use serenity::prelude::*;
 use std::collections::HashMap;
 
 use crate::commands::mastery::MasteryCommand;
+use crate::commands::about::AboutCommand;
 use crate::commands::help::HelpCommand;
 use crate::commands::Command;
 
@@ -17,7 +18,9 @@ impl CommandHandler {
 
         
         commands.insert("mastery".to_string(), Box::new(MasteryCommand::new())); 
+        commands.insert("about".to_string(), Box::new(AboutCommand::new())); 
         commands.insert("help".to_string(), Box::new(HelpCommand::new())); 
+        
 
         CommandHandler { commands }
     }
