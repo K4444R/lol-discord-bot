@@ -3,6 +3,8 @@ use serenity::model::gateway::GatewayIntents;
 use std::env;
 use std::error::Error;
 use dotenvy::dotenv;
+//use tracing::{info, warn}; 
+use tracing_subscriber; 
 
 mod commands;
 mod handler;
@@ -13,6 +15,7 @@ use handler::Handler;
 async fn main() -> Result<(), Box<dyn Error>> {
     // Load the .env file
     dotenv()?;
+    tracing_subscriber::fmt::init();
 
     let token = env::var("DISCORD_TOKEN")
         .map_err(|_| "Expected a token in the environment")?;

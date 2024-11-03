@@ -1,4 +1,5 @@
 use anyhow::Result;
+use serenity::all::{CreateInteractionResponse, CreateInteractionResponseMessage, Interaction};
 use serenity::async_trait;
 use serenity::model::channel::Message;
 use serenity::prelude::*;
@@ -6,6 +7,7 @@ use riven::{RiotApi, consts::PlatformRoute};
 use std::env;
 
 use crate::commands::Command;
+use crate::commands::region::RegionCommand;
 
 pub struct ProfileCommand;
 
@@ -22,8 +24,10 @@ impl Command for ProfileCommand {
         let parts: Vec<&str> = command_input.trim().split('#').collect();
         let game_name = parts[0];
         let tag_line = if parts.len() > 1 { parts[1] } else { "" };
+        
+        let region = RegionCommand::get_region();
 
-        match get_summoner_stats(game_name, tag_line).await {
+        match get_summoner_stats(region, game_name, tag_line).await {
             Ok(response) => {
                 if let Err(why) = msg.channel_id.say(&ctx.http, response).await {
                     println!("Error sending message: {:?}", why);
@@ -39,6 +43,41 @@ impl Command for ProfileCommand {
 
     }
 
+    async fn handle_interaction(&self, ctx: &Context, interaction: &Interaction) {
+        if let Some(command_interaction) = interaction.as_command() {
+            let input = command_interaction.data.options.iter()
+                .find(|option| option.name == "input") // Предполагается, что вы передали параметр input
+                .map(|option| option.value.as_str().unwrap_or(""))
+                .unwrap_or("");
+    
+            let parts: Vec<&str> = input.trim().split('#').collect();
+            let game_name = parts[0];
+            let tag_line = if parts.len() > 1 { parts[1] } else { "" };
+            
+            let region = RegionCommand::get_region();
+    
+            match get_summoner_stats(region, game_name, tag_line).await {
+                Ok(response) => {
+                    let create_response = CreateInteractionResponse::Message(CreateInteractionResponseMessage::default().content(response));
+    
+                    if let Err(why) = command_interaction.create_response(&ctx.http, create_response).await {
+                        tracing::error!("Error responding to interaction: {:?}", why);
+                    }
+                }
+                Err(why) => {
+                    println!("Error fetching champion masteries: {:?}", why);
+                    let error_response = CreateInteractionResponse::Message(CreateInteractionResponseMessage::default().content("Failed to fetch champion masteries.".to_string()));
+    
+                    if let Err(why) = command_interaction.create_response(&ctx.http, error_response).await {
+                        tracing::error!("Error responding to interaction: {:?}", why);
+                    }
+                }
+            }
+        } else {
+            println!("This interaction is not a command interaction.");
+        }
+    }
+    
     fn name(&self) -> &str {
         "profile"
     }
@@ -48,10 +87,10 @@ impl Command for ProfileCommand {
     }
 }
 
-async fn get_summoner_stats(game_name: &str, tag_line: &str) -> Result<String> {
+async fn get_summoner_stats(platform: PlatformRoute, game_name: &str, tag_line: &str) -> Result<String> {
     let api_key = env::var("RIOT_API_KEY")?; 
     let riot_api = RiotApi::new(&api_key);
-    let platform = PlatformRoute::RU; // Make sure this is the correct region
+
 
     debug_log(&format!("Fetching account for {}#{}", game_name, tag_line));
 
